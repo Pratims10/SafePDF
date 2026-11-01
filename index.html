@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafePDF.in — Private On-Device Document Toolkit</title>
+    
+    <!-- Embedded SVG Shield Favicon for Browser Tabs -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2310b981'/%3E%3Cpath d='M16 5L7 9v7c0 6.2 3.8 11.9 9 13.5 5.2-1.6 9-7.3 9-13.5V9l-9-4zm-1.5 14.5l-3.5-3.5 1.4-1.4 2.1 2.1 4.6-4.6 1.4 1.4-6 6z' fill='%23050507'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Typography: Montserrat & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Client-Side PDF & ZIP Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+    
+    <style>
+        /* =========================================================
+           100% NATIVE CSS THEME ENGINE (NO TAILWIND CONFIG NEEDED)
+           ========================================================= */
+        body[data-theme="light"] {
+            --bg-main: #f1f5f9;
+            --bg-header: rgba(255, 255, 255, 0.94);
+            --bg-card: #ffffff;
+            --bg-subtle: #f8fafc;
+            --bg-tab-dock: #e2e8f0;
+            --bg-input: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --border-input: #94a3b8;
+            --card-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.08);
+            --btn-primary-bg: #0f172a;
+            --btn-primary-text: #ffffff;
+            --btn-primary-hover: #1e293b;
+            --step-idle-bg: #e2e8f0;
+            --step-idle-border: #cbd5e1;
+            --step-idle-text: #475569;
+            --line-bg: #cbd5e1;
+            --warn-bg: #fffbeb;
+            --warn-border: #f59e0b;
+            --warn-text: #b45309;
+            --safe-bg: #ecfdf5;
+            --safe-border: #10b981;
+            --safe-text: #047857;
+            --glow-opacity: 0.03;
+            --logo-text: #0f172a;
+        }
+
+        body[data-theme="dark"] {
+            --bg-main: #060609;
+            --bg-header: rgba(10, 10, 15, 0.90);
+            --bg-card: #111118;
+            --bg-subtle: #181822;
+            --bg-tab-dock: #09090e;
+            --bg-input: #0b0b10;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-input: rgba(255, 255, 255, 0.2);
+            --card-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.75);
+            --btn-primary-bg: #ffffff;
+            --btn-primary-text: #09090b;
+            --btn-primary-hover: #e2e8f0;
+            --step-idle-bg: #181824;
+            --step-idle-border: rgba(255, 255, 255, 0.14);
+            --step-idle-text: #64748b;
+            --line-bg: rgba(255, 255, 255, 0.12);
+            --warn-bg: rgba(245, 158, 11, 0.12);
+            --warn-border: rgba(245, 158, 11, 0.4);
+            --warn-text: #fcd34d;
+            --safe-bg: rgba(16, 185, 129, 0.12);
+            --safe-border: rgba(16, 185, 129, 0.4);
+            --safe-text: #6ee7b7;
+            --glow-opacity: 0.12;
+            --logo-text: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-main) !important;
+            color: var(--text-primary) !important;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            margin: 0;
+        }
+
+        .brand-font { font-family: 'Montserrat', sans-serif; }
+
+        .brand-logo-link .logo-word {
+            color: var(--logo-text);
+            transition: color 0.2s ease;
+        }
+        .brand-logo-link:hover .logo-word {
+            color: #10b981 !important;
+        }
+
+        .ambient-glow {
+            opacity: var(--glow-opacity);
+            transition: opacity 0.3s ease;
+        }
+
+        .theme-header {
+            background-color: var(--bg-header);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .theme-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .theme-subtle {
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .theme-input {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-input);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+        .theme-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        .theme-text-primary { color: var(--text-primary) !important; }
+        .theme-text-secondary { color: var(--text-secondary) !important; }
+        .theme-text-muted { color: var(--text-muted) !important; }
+
+        .theme-btn-primary {
+            background-color: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
+            transition: all 0.2s ease;
+        }
+        .theme-btn-primary:hover {
+            background-color: var(--btn-primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .banner-warn {
+            background-color: var(--warn-bg);
+            border: 1px solid var(--warn-border);
+        }
+        .banner-warn-title { color: var(--warn-text); }
+
+        .banner-safe {
+            background-color: var(--safe-bg);
+            border: 1px solid var(--safe-border);
+        }
+        .banner-safe-title { color: var(--safe-text); }
+
+        /* =========================================================
+           SEGMENTED TAB TRACK vs. CONFIG ACTION CHIPS
+           ========================================================= */
+        .theme-tab-dock {
+            background-color: var(--bg-tab-dock);
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-btn {
+            color: var(--text-secondary);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .nav-btn:hover:not(.active-tab) {
+            color: var(--text-primary);
+            background-color: rgba(16, 185, 129, 0.08);
+        }
+        .nav-btn.active-tab {
+            background-color: #10b981 !important;
+            color: #050507 !important;
+            font-weight: 800;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+
+        /* Mobile Drawer Active Tab */
+        .mobile-nav-btn {
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+        .mobile-nav-btn.active-mobile-tab {
+            background-color: rgba(16, 185, 129, 0.15);
+            border-color: #10b981;
+            color: #10b981 !important;
+            font-weight: 800;
+        }
+
+        /* Config / Utility Chips on Right */
+        .config-chip {
+            background-color: transparent;
+            border: 1px dashed var(--border-input);
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        .config-chip:hover {
+            border-style: solid;
+            border-color: #10b981;
+            color: var(--text-primary);
+            background-color: var(--bg-subtle);
+        }
+
+        .step-node-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+        .step-idle {
+            background-color: var(--step-idle-bg);
+            border: 2px solid var(--step-idle-border);
+            color: var(--step-idle-text);
+        }
+        .step-done {
+            background-color: #10b981;
+            border: 2px solid #10b981;
+            color: #050507;
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.4);
+        }
+        .step-warn {
+            background-color: #f59e0b;
+            border: 2px solid #f59e0b;
+            color: #050507;
+            box-shadow: 0 0 18px rgba(245, 158, 11, 0.4);
+            animation: pulse-warn 2s infinite;
+        }
+
+        @keyframes pulse-warn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        @keyframes spin-clockwise {
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-custom {
+            animation: spin-clockwise 1.1s linear infinite;
+        }
+        @keyframes radar-pulse {
+            0%, 100% { transform: scale(0.92); opacity: 0.85; }
+            50% { transform: scale(1.15); opacity: 0.25; }
+        }
+        .animate-radar {
+            animation: radar-pulse 1.8s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body data-theme="dark" class="min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-black relative overflow-x-hidden">
+
+    <!-- TEMPORARY TOAST NOTIFICATION -->
+    <div id="toast-notification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="px-4 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-2xl shadow-emerald-500/30 flex items-center space-x-2">
+            <span>🧹</span>
+            <span id="toast-message">Memory wiped! All files and keys cleared from this device.</span>
+        </div>
+    </div>
+
+    <!-- Ambient Glow -->
+    <div class="ambient-glow absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-emerald-500 blur-[130px] rounded-full pointer-events-none"></div>
+
+    <!-- STICKY TOP NAVIGATION (Clear Separation: Brand Left | Segmented Tool Tabs Center | Config Utilities Right) -->
+    <header class="sticky top-0 z-40 w-full theme-header">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-[74px] flex items-center justify-between gap-2">
+            
+            <!-- 1. Brand Logo -->
+            <a href="#" onclick="switchTab('unlocker'); return false;" class="brand-logo-link flex items-center space-x-2 shrink-0">
+                <div class="flex items-center tracking-tighter brand-font text-2xl font-black">
+                    <span class="logo-word">Safe</span>
+                    <span class="mx-1 inline-flex items-center justify-center w-7 h-7 bg-emerald-500 text-slate-950 rounded-lg shadow-md shadow-emerald-500/25">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    </span>
+                    <span class="logo-word">PDF</span>
+                    <span class="text-xs ml-1 px-1.5 py-0.5 bg-emerald-500/15 text-emerald-500 rounded font-bold border border-emerald-500/25">.in</span>
+                </div>
+            </a>
+
+            <!-- 2. Center: Recessed Segmented Tab Switcher (Clearly grouped as Workspace Tabs) -->
+            <div class="hidden md:flex items-center">
+                <nav class="flex items-center p-1.5 rounded-2xl theme-tab-dock space-x-1" role="tablist" aria-label="Workspace Tools">
+                    <button type="button" onclick="switchTab('unlocker')" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 cursor-pointer active-tab" data-target="unlocker">
+                        <span>🔓</span>
+                        <span>Unlock PDFs</span>
+                    </button>
+                    <button type="button" onclick="switchTab('resizer')" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 cursor-pointer" data-target="resizer">
+                        <span>🖼️</span>
+                        <span>Photo &amp; Doc Resizer</span>
+                    </button>
+                    <button type="button" onclick="switchTab('merge')" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 cursor-pointer" data-target="merge">
+                        <span>📄</span>
+                        <span>Merge PDFs</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- 3. Right: Utilities & Config Controls (Separated & Styled as Quick Settings/Actions) -->
+            <div class="flex items-center space-x-2 shrink-0">
+                <div class="hidden lg:block h-6 w-[1px] mr-1" style="background-color: var(--border-color);"></div>
+
+                <!-- Config 1: Password Rules Reference -->
+                <button type="button" onclick="openModal()" class="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg config-chip text-[11px] font-semibold cursor-pointer" title="View Supported Bank & Tax Password Rules">
+                    <span>🔑</span>
+                    <span>Password Rules</span>
+                </button>
+
+                <!-- Config 2: Clear RAM / Wipe Session -->
+                <button type="button" onclick="clearMemoryState()" class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white text-[11px] font-bold transition-all cursor-pointer" title="Wipe all loaded files from device memory">
+                    <span>🧹</span>
+                    <span class="hidden sm:inline">Clear Memory</span>
+                </button>
+                
+                <!-- Config 3: Light / Dark Theme Toggle -->
+                <button type="button" id="theme-toggle-btn" onclick="toggleTheme()" class="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg config-chip text-[11px] font-bold cursor-pointer select-none" title="Toggle Light or Dark Mode">
+                    <span id="theme-icon" class="text-sm leading-none">🌙</span>
+                    <span id="theme-label" class="hidden xl:inline">Dark</span>
+                </button>
+
+                <!-- Mobile Hamburger Button -->
+                <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-xl theme-subtle theme-text-primary cursor-pointer" aria-label="Menu">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MOBILE HAMBURGER DRAWER (Explicitly Divided into WORKSPACE TABS vs. UTILITIES) -->
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden md:hidden flex flex-col p-6">
+        <div class="theme-card rounded-3xl p-6 flex flex-col space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b" style="border-color: var(--border-color);">
+                <a href="#" onclick="switchTab('unlocker'); toggleMobileMenu(); return false;" class="brand-logo-link flex items-center space-x-1.5 brand-font text-xl font-black">
+                    <span class="logo-word">Safe</span>
+                    <span class="inline-flex items-center justify-center w-6 h-6 bg-emerald-500 text-slate-950 rounded-md">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    </span>
+                    <span class="logo-word">PDF.in</span>
+                </a>
+                <button type="button" onclick="toggleMobileMenu()" class="p-2 rounded-xl theme-subtle theme-text-primary">✕</button>
+            </div>
+
+            <!-- Section 1: Workspace Tabs -->
+            <div class="space-y-2">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest theme-text-muted px-1">Select Tool (Tabs)</span>
+                <button type="button" onclick="switchTab('unlocker'); toggleMobileMenu();" data-target="unlocker" class="mobile-nav-btn active-mobile-tab w-full text-left px-4 py-3 rounded-xl font-semibold text-sm flex items-center justify-between">
+                    <span>🔓 Unlock PDFs (Bank, Tax &amp; Brokers)</span>
+                    <span class="text-xs">→</span>
+                </button>
+                <button type="button" onclick="switchTab('resizer'); toggleMobileMenu();" data-target="resizer" class="mobile-nav-btn w-full text-left px-4 py-3 rounded-xl font-semibold text-sm flex items-center justify-between">
+                    <span>🖼️ Photo &amp; Document Resizer</span>
+                    <span class="text-xs">→</span>
+                </button>
+                <button type="button" onclick="switchTab('merge'); toggleMobileMenu();" data-target="merge" class="mobile-nav-btn w-full text-left px-4 py-3 rounded-xl font-semibold text-sm flex items-center justify-between">
+                    <span>📄 Merge PDFs</span>
+                    <span class="text-xs">→</span>
+                </button>
+            </div>
+
+            <!-- Section 2: Configs & Utilities -->
+            <div class="pt-3 border-t space-y-2" style="border-color: var(--border-color);">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest theme-text-muted px-1">Utilities &amp; Reference</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="openModal(); toggleMobileMenu();" class="text-center px-3 py-2.5 rounded-xl config-chip font-bold text-xs">
+                        🔑 Password Rules
+                    </button>
+                    <button type="button" onclick="clearMemoryState(); toggleMobileMenu();" class="text-center px-3 py-2.5 rounded-xl bg-rose-500/15 text-rose-500 border border-rose-500/30 font-bold text-xs">
+                        🧹 Clear Memory
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPANDED VERIFIED PASSWORD RULES MODAL -->
+    <div id="password-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="theme-card rounded-3xl max-w-4xl w-full p-6 sm:p-8 relative max-h-[88vh] overflow-y-auto">
+            <button type="button" onclick="closeModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full theme-subtle flex items-center justify-center theme-text-secondary hover:text-emerald-500 cursor-pointer">✕</button>
+            
+            <div class="flex items-center space-x-3 mb-2">
+                <span class="text-2xl">🔑</span>
+                <h3 class="text-xl font-bold brand-font theme-text-primary">Verified Indian Bank, Broker, Tax &amp; Bill Password Rules</h3>
+            </div>
+            <p class="text-xs theme-text-muted mb-6">SafePDF automatically generates and tests these exact institutional formats in memory when you enter your details in the Universal Keyring.</p>
+
+            <div class="space-y-6 text-xs">
+                <!-- 1. Major Indian Banks -->
+                <div>
+                    <h4 class="font-bold text-emerald-500 uppercase tracking-wider text-[11px] mb-2.5">1. Indian Banks (Savings Accounts &amp; Credit Cards)</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">HDFC Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings:</b> Customer ID<br><b>Credit Card:</b> First 4 letters of Name (CAPS) + <code class="text-emerald-500 font-bold">DDMM</code> (or Last 4 digits of Card)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">ICICI Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings &amp; Card:</b> First 4 letters of Name (lowercase) + <code class="text-emerald-500 font-bold">DDMM</code> (e.g. <code class="text-emerald-500 font-bold">prat1408</code>) or Customer ID</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">State Bank of India (SBI)</strong>
+                            <span class="theme-text-secondary"><b>Savings:</b> Last 5 digits of Mobile + <code class="text-emerald-500 font-bold">DDMMYY</code> (or <code class="text-emerald-500 font-bold">DDMMYYYY@Last4Mob</code>)<br><b>SBI Card:</b> <code class="text-emerald-500 font-bold">DDMMYYYY</code> + Last 4 digits of Card</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Axis Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings &amp; Card:</b> First 4 letters of Name (CAPS) + <code class="text-emerald-500 font-bold">DDMM</code> (or <code class="text-emerald-500 font-bold">DDYY</code>), or 9-digit Customer ID</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Kotak Mahindra Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings &amp; Card:</b> CRN (Customer Relationship No.), <code class="text-emerald-500 font-bold">DDMMYYYY</code>, or First 4 letters (lowercase) + <code class="text-emerald-500 font-bold">DDMM</code></span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">IDFC FIRST Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings &amp; Card:</b> Date of Birth in <code class="text-emerald-500 font-bold">DDMM</code> (4 digits) or <code class="text-emerald-500 font-bold">DDMMYYYY</code> (8 digits)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">IndusInd Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings &amp; Card:</b> First 4 letters of Name (lowercase) + <code class="text-emerald-500 font-bold">DDMM</code> (e.g. <code class="text-emerald-500 font-bold">prat1408</code>) or <code class="text-emerald-500 font-bold">DDMMYYYY</code></span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Bank of Baroda (BoB)</strong>
+                            <span class="theme-text-secondary"><b>Savings &amp; Card:</b> First 4 letters of Name (lowercase) + <code class="text-emerald-500 font-bold">DDMM</code> (e.g. <code class="text-emerald-500 font-bold">prat1408</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Punjab National Bank (PNB)</strong>
+                            <span class="theme-text-secondary"><b>Savings:</b> 16-digit Account Number or Customer ID<br><b>Credit Card:</b> <code class="text-emerald-500 font-bold">DDMMYYYY</code></span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Yes Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings &amp; Card:</b> First 4 letters of Name (CAPS) + <code class="text-emerald-500 font-bold">DDMM</code> (e.g. <code class="text-emerald-500 font-bold">PRAT1408</code>) or Customer ID</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Canara Bank &amp; Union Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings:</b> Customer ID or First 4 letters of Name (CAPS) + <code class="text-emerald-500 font-bold">DDMM</code> (or Last 4 digits of Account)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">RBL, Federal &amp; AU Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings &amp; Card:</b> First 4 letters of Name (CAPS/lowercase) + <code class="text-emerald-500 font-bold">DDMM</code> or <code class="text-emerald-500 font-bold">DDMMYYYY</code></span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Standard Chartered &amp; HSBC</strong>
+                            <span class="theme-text-secondary"><b>Statements:</b> Date of Birth <code class="text-emerald-500 font-bold">DDMMYY</code> or First 4 letters of Name + <code class="text-emerald-500 font-bold">DDMM</code></span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">American Express (Amex)</strong>
+                            <span class="theme-text-secondary"><b>Credit Card:</b> First 4 letters of Name (CAPS) + <code class="text-emerald-500 font-bold">DDMM</code> or <code class="text-emerald-500 font-bold">DDMMYYYY</code></span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Bank of India &amp; Indian Bank</strong>
+                            <span class="theme-text-secondary"><b>Savings:</b> Customer ID or First 4 letters of Name (lowercase) + <code class="text-emerald-500 font-bold">DDMM</code></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Stock Brokers, Demat & Mutual Funds -->
+                <div>
+                    <h4 class="font-bold text-emerald-500 uppercase tracking-wider text-[11px] mb-2.5">2. Stock Brokers, Demat &amp; Mutual Fund Statements</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Zerodha (Console / Contract Notes)</strong>
+                            <span class="theme-text-secondary">10-character PAN in <b>UPPERCASE</b> (e.g. <code class="text-emerald-500 font-bold">ABCDE1234F</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Groww (Tax P&amp;L / Demat)</strong>
+                            <span class="theme-text-secondary">10-character PAN in <b>UPPERCASE</b> (<code class="text-emerald-500 font-bold">ABCDE1234F</code>) or <code class="text-emerald-500 font-bold">DDMMYYYY</code></span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Angel One &amp; Upstox</strong>
+                            <span class="theme-text-secondary">10-character PAN in <b>UPPERCASE</b> (<code class="text-emerald-500 font-bold">ABCDE1234F</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">INDmoney &amp; Dhan</strong>
+                            <span class="theme-text-secondary">10-character PAN in <b>UPPERCASE</b> or Date of Birth (<code class="text-emerald-500 font-bold">DDMMYYYY</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">NSDL &amp; CDSL CAS</strong>
+                            <span class="theme-text-secondary">10-character PAN in <b>UPPERCASE</b> (<code class="text-emerald-500 font-bold">ABCDE1234F</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">CAMS / KFintech Mailback</strong>
+                            <span class="theme-text-secondary">10-character PAN (CAPS/lowercase) or user-defined portal key</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Income Tax, EPFO & Government Portals -->
+                <div>
+                    <h4 class="font-bold text-emerald-500 uppercase tracking-wider text-[11px] mb-2.5">3. Income Tax, Salary &amp; Government Portals</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">AIS / TIS &amp; ITR-V Acknowledgement</strong>
+                            <span class="theme-text-secondary">10-char PAN (<b>lowercase</b>) + DOB <code class="text-emerald-500 font-bold">DDMMYYYY</code> (e.g. <code class="text-emerald-500 font-bold">abcde1234f14081995</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Form 16 (Part A &amp; Part B)</strong>
+                            <span class="theme-text-secondary">First 5 chars of PAN (CAPS) + <code class="text-emerald-500 font-bold">DDMMYYYY</code>, or Full PAN + <code class="text-emerald-500 font-bold">DDMMYYYY</code></span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Form 26AS (TRACES)</strong>
+                            <span class="theme-text-secondary">Date of Birth in <code class="text-emerald-500 font-bold">DDMMYYYY</code> format (e.g. <code class="text-emerald-500 font-bold">14081995</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">e-PAN Card PDF (NSDL / UTI)</strong>
+                            <span class="theme-text-secondary">Date of Birth in <code class="text-emerald-500 font-bold">DDMMYYYY</code> format (e.g. <code class="text-emerald-500 font-bold">14081995</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">UIDAI e-ID PDF</strong>
+                            <span class="theme-text-secondary">First 4 letters of Name (<b>CAPS</b>) + Year of Birth <code class="text-emerald-500 font-bold">YYYY</code> (e.g. <code class="text-emerald-500 font-bold">PRAT1995</code>)</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-subtle">
+                            <strong class="theme-text-primary block font-bold">Airtel, Jio &amp; Vi Postpaid Bills</strong>
+                            <span class="theme-text-secondary">First 4 letters of Name (lowercase) + Last 4 digits of Mobile No. or <code class="text-emerald-500 font-bold">DDMM</code></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t text-right" style="border-color: var(--border-color);">
+                <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-all cursor-pointer">Close Guide</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REAL-TIME PDF PREVIEW MODAL (Used by Unlocker & Merger) -->
+    <div id="preview-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="theme-card rounded-3xl max-w-4xl w-full p-5 sm:p-6 relative flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between pb-4 border-b" style="border-color: var(--border-color);">
+                <div class="overflow-hidden pr-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 text-[10px] font-bold border border-emerald-500/30">👁️ Live Document Preview</span>
+                        <span id="preview-page-info" class="text-[11px] theme-text-muted font-semibold"></span>
+                    </div>
+                    <h3 id="preview-modal-title" class="text-sm sm:text-base font-bold theme-text-primary truncate mt-1">Document.pdf</h3>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                    <button type="button" id="preview-download-btn" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-all cursor-pointer shadow-md shadow-emerald-500/20">
+                        ⬇️ Download PDF
+                    </button>
+                    <button type="button" onclick="closePreviewModal()" class="w-8 h-8 rounded-full theme-subtle flex items-center justify-center theme-text-secondary hover:text-emerald-500 cursor-pointer">✕</button>
+                </div>
+            </div>
+
+            <div id="preview-canvas-container" class="flex-grow overflow-y-auto py-6 px-2 sm:px-6 space-y-6 flex flex-col items-center bg-slate-900/40 rounded-2xl mt-4">
+                <!-- PDF pages rendered here in real time -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 w-full flex-grow">
+        
+        <!-- Hero Title -->
+        <div class="text-center mb-7">
+            <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-2.5 brand-font theme-text-primary">Private Document Toolkit</h2>
+            <p class="theme-text-secondary text-sm sm:text-base max-w-xl mx-auto leading-relaxed">Your personal files, handled in total secrecy. Strip PDF passwords, shrink photo sizes to the dot, and bundle documents right on your screen—even with your Wi-Fi switched off.</p>
+        </div>
+
+        <!-- LIVE WI-FI STATUS BANNER -->
+        <div id="connection-banner" class="mb-7 p-4 rounded-2xl transition-all duration-300 banner-warn">
+            <div class="flex items-start space-x-3">
+                <span class="text-xl" id="banner-icon">⚠️</span>
+                <div class="text-sm">
+                    <strong class="font-bold block mb-0.5 banner-warn-title" id="banner-title">Wi-Fi is ON — Turn Off for 100% Peace of Mind</strong>
+                    <span id="banner-desc" class="theme-text-secondary text-xs">Turn off your Wi-Fi or Mobile Data right now—watch this entire website keep working without internet.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLEEK CONNECTED 1-TO-5 STEP PROGRESS TRACKER -->
+        <div class="theme-card rounded-3xl p-5 sm:p-6 mb-8">
+            <div class="flex items-center justify-between mb-5">
+                <span class="text-[11px] uppercase tracking-widest theme-text-muted font-bold">Your 5-Step Progress</span>
+                <span id="pipeline-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30">Step 1 of 5 • Turn Off Wi-Fi Recommended</span>
+            </div>
+
+            <div class="relative">
+                <div class="absolute top-[19px] left-[8%] right-[8%] h-[3px] rounded-full" style="background-color: var(--line-bg);"></div>
+                <div id="progress-line-fill" class="absolute top-[19px] left-[8%] h-[3px] bg-emerald-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
+
+                <div class="grid grid-cols-5 relative z-10 text-center">
+                    <div class="flex flex-col items-center">
+                        <div id="node-1" class="step-node-circle step-done">✓</div>
+                        <span class="mt-2 text-xs font-bold theme-text-primary">1. Site Ready</span>
+                        <span class="text-[10px] theme-text-muted hidden sm:inline">Works Offline</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div id="node-2" class="step-node-circle step-warn">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <span id="node-2-title" class="mt-2 text-xs font-bold text-amber-500">2. Turn Off Wi-Fi</span>
+                        <span id="node-2-sub" class="text-[10px] theme-text-muted hidden sm:inline">Wi-Fi Still ON</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div id="node-3" class="step-node-circle step-idle">3</div>
+                        <span id="node-3-title" class="mt-2 text-xs font-semibold theme-text-muted">3. Select Files</span>
+                        <span class="text-[10px] theme-text-muted hidden sm:inline">Stays on Device</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div id="node-4" class="step-node-circle step-idle">4</div>
+                        <span id="node-4-title" class="mt-2 text-xs font-semibold theme-text-muted">4. Unlock / Resize</span>
+                        <span class="text-[10px] theme-text-muted hidden sm:inline">Instant Fix</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div id="node-5" class="step-node-circle step-idle">5</div>
+                        <span id="node-5-title" class="mt-2 text-xs font-semibold theme-text-muted">5. Download</span>
+                        <span class="text-[10px] theme-text-muted hidden sm:inline">Save to Device</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 1: UNIFIED PDF UNLOCKER ==================== -->
+        <div id="panel-unlocker" class="space-y-6 tab-panel">
+            <div class="theme-card rounded-3xl p-8 sm:p-10 text-center">
+                <div class="max-w-md mx-auto space-y-4">
+                    <div class="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-emerald-500/20">🔓</div>
+                    <h3 class="text-xl font-bold brand-font theme-text-primary">Unlock Bank, Tax &amp; Broker PDFs</h3>
+                    <p class="text-xs theme-text-secondary leading-relaxed">Drop your locked PDF statements. Each file stays locked until its password is cryptographically verified—then you can preview it live and download a permanently unlocked copy.</p>
+                    
+                    <input type="file" id="unlocker-file-input" multiple accept=".pdf,application/pdf" class="hidden" onchange="handleUnifiedUnlockUpload(this.files)">
+                    <label for="unlocker-file-input" class="block w-full py-3.5 px-4 theme-btn-primary font-bold text-sm rounded-xl cursor-pointer shadow-md">
+                        Select Locked PDFs
+                    </label>
+                    <p class="text-[11px] theme-text-muted font-medium">Accepted files: <span class="theme-text-secondary font-bold">.PDF</span> (Multiple files supported)</p>
+                </div>
+
+                <!-- LIVE FILE QUEUE BOARD -->
+                <div id="unlocker-queue-container" class="hidden mt-8 pt-6 border-t text-left max-w-2xl mx-auto space-y-6" style="border-color: var(--border-color);">
+                    
+                    <!-- Universal Keyring Pool -->
+                    <div class="p-4 sm:p-5 theme-subtle rounded-2xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold theme-text-primary uppercase tracking-wider">Universal Keyring (Auto-Tests Across All Locked Files)</h4>
+                            <div class="flex items-center space-x-2">
+                                <span id="crack-activity-indicator" class="text-[11px] font-bold text-emerald-500 hidden">🔄 Testing keys...</span>
+                                <button type="button" onclick="triggerAutoCrack('manual-button')" class="px-3 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-[11px] hover:bg-emerald-400 transition-all cursor-pointer">
+                                    🔍 Test Keys Now
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-[11px] theme-text-muted">Enter the details you know. We combine them automatically (e.g., Name + DOB, PAN, or Card/Customer ID) and test every locked PDF below.</p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="block text-[11px] font-semibold theme-text-secondary mb-1">First 4 Letters of Name</label>
+                                <input type="text" id="val-unlock-name" maxlength="4" placeholder="e.g. PRAT" class="w-full px-3 py-2 theme-input rounded-xl text-xs uppercase font-bold" oninput="handleKeyringInput(this, 4)">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold theme-text-secondary mb-1">Date of Birth (DDMM or DDMMYYYY)</label>
+                                <input type="text" id="val-unlock-dob" maxlength="8" placeholder="e.g. 1408 or 14081995" class="w-full px-3 py-2 theme-input rounded-xl text-xs font-bold" oninput="handleKeyringInput(this, 4)">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold theme-text-secondary mb-1">10-Character PAN Number</label>
+                                <input type="text" id="val-unlock-pan" maxlength="10" placeholder="e.g. ABCDE1234F" class="w-full px-3 py-2 theme-input rounded-xl text-xs uppercase font-bold" oninput="handleKeyringInput(this, 10)">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold theme-text-secondary mb-1">Card/Acct Last 4, Cust ID, or Mobile</label>
+                                <input type="text" id="val-unlock-extra" placeholder="Comma separated: e.g. 4421, 8513404494" class="w-full px-3 py-2 theme-input rounded-xl text-xs font-bold" oninput="handleKeyringInput(this, 4)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live File List Table -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold theme-text-primary uppercase tracking-wider">File Queue Status (<span id="unlocked-counter">0</span> / <span id="total-counter">0</span> Unlocked)</span>
+                            <span class="text-[11px] theme-text-muted">Or enter a specific password next to any locked file</span>
+                        </div>
+                        <div id="file-queue-rows" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                            <!-- Injected dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Global Bulk Download Actions -->
+                    <div class="pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3" style="border-color: var(--border-color);">
+                        <p id="unlocker-process-msg" class="text-xs font-semibold text-emerald-500"></p>
+                        <div class="flex items-center space-x-3 w-full sm:w-auto">
+                            <button type="button" onclick="downloadAllUnlockedZipped()" id="btn-download-all" class="w-full sm:w-auto py-3 px-6 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                                📦 Download All Unlocked (ZIP)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: PHOTO & DOCUMENT RESIZER ==================== -->
+        <div id="panel-resizer" class="space-y-6 tab-panel hidden">
+            <div class="theme-card rounded-3xl p-8 sm:p-10 text-center">
+                <div class="max-w-lg mx-auto space-y-5">
+                    <div class="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-emerald-500/20">🖼️</div>
+                    <div>
+                        <h3 class="text-xl font-bold brand-font theme-text-primary">Photo &amp; Document Resizer</h3>
+                        <p class="text-xs theme-text-secondary leading-relaxed mt-1">Reduce the size of any photo, signature, ID scan, or PDF document to fit strict portal upload limits without uploading your file to the internet.</p>
+                    </div>
+
+                    <!-- Scale up to 1000 KB (1 MB) with Non-Overlapping Proportional Scale Labels -->
+                    <div class="p-5 theme-subtle rounded-2xl text-left space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold theme-text-primary">Set Maximum File Size Limit</label>
+                            <div class="flex items-center space-x-1.5">
+                                <input type="number" id="size-input" min="10" max="2000" value="50" oninput="syncSliderFromInput(this.value)" class="w-20 px-2.5 py-1.5 text-center theme-input rounded-lg text-sm font-black">
+                                <span class="text-xs font-bold theme-text-muted">KB</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-1 pb-5 relative">
+                            <input type="range" id="size-slider" min="10" max="1000" step="5" value="50" oninput="syncInputFromSlider(this.value)" class="w-full accent-emerald-500 cursor-pointer h-2 rounded-lg block">
+                            
+                            <!-- Evenly Spaced Non-Overlapping Scale Labels (10 KB to 1000 KB) -->
+                            <div class="relative w-full h-5 mt-1.5 text-[10px] theme-text-muted font-semibold">
+                                <button type="button" onclick="setExactKB(10)" style="left: 0%;" class="absolute -translate-x-0 hover:text-emerald-500 cursor-pointer whitespace-nowrap">10 KB</button>
+                                <button type="button" onclick="setExactKB(250)" style="left: 24.24%;" class="absolute -translate-x-1/2 hover:text-emerald-500 cursor-pointer whitespace-nowrap">250 KB</button>
+                                <button type="button" onclick="setExactKB(500)" style="left: 49.49%;" class="absolute -translate-x-1/2 hover:text-emerald-500 cursor-pointer whitespace-nowrap">500 KB</button>
+                                <button type="button" onclick="setExactKB(750)" style="left: 74.75%;" class="absolute -translate-x-1/2 hover:text-emerald-500 cursor-pointer whitespace-nowrap">750 KB</button>
+                                <button type="button" onclick="setExactKB(1000)" style="left: 100%;" class="absolute -translate-x-full hover:text-emerald-500 cursor-pointer whitespace-nowrap">1000 KB (1 MB)</button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Portal Presets -->
+                        <div class="pt-2 border-t flex flex-wrap items-center gap-1.5" style="border-color: var(--border-color);">
+                            <span class="text-[10px] theme-text-muted font-bold mr-1">Quick Presets:</span>
+                            <button type="button" onclick="setExactKB(20)" class="px-2.5 py-1 rounded-lg theme-input text-[10px] font-bold hover:border-emerald-500 cursor-pointer">20 KB (Sign)</button>
+                            <button type="button" onclick="setExactKB(50)" class="px-2.5 py-1 rounded-lg theme-input text-[10px] font-bold hover:border-emerald-500 cursor-pointer text-emerald-500">50 KB (Photo)</button>
+                            <button type="button" onclick="setExactKB(100)" class="px-2.5 py-1 rounded-lg theme-input text-[10px] font-bold hover:border-emerald-500 cursor-pointer">100 KB</button>
+                            <button type="button" onclick="setExactKB(200)" class="px-2.5 py-1 rounded-lg theme-input text-[10px] font-bold hover:border-emerald-500 cursor-pointer">200 KB (ID Card)</button>
+                            <button type="button" onclick="setExactKB(500)" class="px-2.5 py-1 rounded-lg theme-input text-[10px] font-bold hover:border-emerald-500 cursor-pointer">500 KB (Doc)</button>
+                            <button type="button" onclick="setExactKB(1000)" class="px-2.5 py-1 rounded-lg theme-input text-[10px] font-bold hover:border-emerald-500 cursor-pointer">1 MB (1000 KB)</button>
+                        </div>
+                    </div>
+
+                    <!-- Watermark Option with Dedicated Apply Button -->
+                    <div class="p-4 theme-subtle rounded-2xl text-left space-y-3">
+                        <label class="flex items-center space-x-2.5 cursor-pointer">
+                            <input type="checkbox" id="watermark-toggle" onchange="toggleWatermarkField(this.checked)" class="w-4 h-4 accent-emerald-500 rounded">
+                            <span class="text-xs font-bold theme-text-primary">Add Protective Watermark Across File (Optional)</span>
+                        </label>
+                        <div id="watermark-input-wrap" class="hidden pt-1 flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="watermark-text" value="FOR VERIFICATION ONLY - DO NOT REUSE" placeholder="Enter custom text (e.g. For Sim Card KYC Only)" onkeydown="if(event.key==='Enter') applyWatermarkNow()" class="flex-1 px-3.5 py-2 theme-input rounded-xl text-xs font-semibold">
+                            <button type="button" onclick="applyWatermarkNow()" class="px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition-all cursor-pointer shrink-0 shadow-sm">
+                                Apply Watermark
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- File Picker -->
+                    <div class="space-y-2.5">
+                        <input type="file" id="resizer-file-input" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" class="hidden" onchange="handleResizerUpload(this.files)">
+                        <label for="resizer-file-input" class="block w-full py-3.5 px-4 theme-btn-primary font-bold text-sm rounded-xl cursor-pointer shadow-md text-center">
+                            Select Photo or PDF Document
+                        </label>
+                        <p class="text-[11px] theme-text-muted font-medium">Accepted files: <span class="theme-text-secondary font-bold">.JPG, .JPEG, .PNG, .WEBP, .PDF</span></p>
+                    </div>
+
+                    <!-- 100% Safe Processing Spinner -->
+                    <div id="resizer-spinner-area" class="hidden py-6 flex flex-col items-center justify-center space-y-3">
+                        <div class="relative w-28 h-28 flex items-center justify-center">
+                            <div class="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin-custom"></div>
+                            <div class="absolute inset-3 rounded-full border-2 border-emerald-500/35 animate-radar"></div>
+                            <div class="relative z-10 text-xs font-black brand-font text-emerald-500 text-center tracking-tight leading-tight">
+                                100%<br>SAFE
+                            </div>
+                        </div>
+                        <p class="text-xs font-bold theme-text-primary animate-pulse">Resizing directly on your device...</p>
+                    </div>
+
+                    <!-- Output Download Area (Contains Single Redo Button) -->
+                    <div id="resizer-output-area" class="hidden p-5 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl text-center space-y-3">
+                        <p id="resizer-result-text" class="text-xs text-emerald-500 font-bold"></p>
+                        <img id="resizer-preview-img" class="max-h-44 mx-auto rounded-lg border border-emerald-500/30 shadow-sm" alt="Preview">
+                        <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+                            <button type="button" onclick="redoResizeWithCurrentFile()" class="py-2.5 px-4 theme-input hover:border-emerald-500 font-bold text-xs rounded-xl transition-all cursor-pointer">
+                                🔄 Re-Resize with New KB Limit
+                            </button>
+                            <button type="button" id="btn-download-resized" onclick="downloadResizedOutput()" class="py-2.5 px-6 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer">
+                                ⬇️ Download Resized File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: MERGE PDFS ==================== -->
+        <div id="panel-merge" class="space-y-6 tab-panel hidden">
+            <div class="theme-card rounded-3xl p-8 sm:p-10 text-center">
+                <div class="max-w-md mx-auto space-y-4">
+                    <div class="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-emerald-500/20">📄</div>
+                    <h3 class="text-xl font-bold brand-font theme-text-primary">Combine Multiple PDFs into One</h3>
+                    <p class="text-xs theme-text-secondary leading-relaxed">Join multiple monthly statements, receipts, or Front &amp; Back pages into a single clean PDF file on your device.</p>
+                    
+                    <input type="file" id="merge-file-input" multiple accept=".pdf,application/pdf" class="hidden" onchange="handleMergeUpload(this.files)">
+                    <label for="merge-file-input" class="block w-full py-3.5 px-4 theme-btn-primary font-bold text-sm rounded-xl cursor-pointer shadow-md">
+                        Select 2 or More PDFs
+                    </label>
+                    <p class="text-[11px] theme-text-muted font-medium">Accepted files: <span class="theme-text-secondary font-bold">.PDF</span> (Select 2 or more unlocked PDFs)</p>
+
+                    <div id="merge-output-area" class="hidden pt-4 space-y-3">
+                        <p id="merge-count-text" class="text-xs text-emerald-500 font-bold"></p>
+                        <div class="flex flex-wrap items-center justify-center gap-3">
+                            <button type="button" onclick="previewMergedPdf()" class="py-3 px-5 theme-input hover:border-emerald-500 font-bold text-xs rounded-xl transition-all cursor-pointer">
+                                👁️ Preview Combined PDF
+                            </button>
+                            <button type="button" onclick="executeRealPdfMerge()" class="py-3 px-6 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer">
+                                ⬇️ Merge &amp; Download Combined PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full border-t mt-16 pt-10 pb-8 text-xs theme-card" style="border-left: none; border-right: none; border-bottom: none;">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            <div>
+                <a href="#" onclick="switchTab('unlocker'); return false;" class="brand-logo-link inline-flex items-center space-x-1.5 brand-font text-base font-black mb-3">
+                    <span class="logo-word">Safe</span>
+                    <span class="inline-flex items-center justify-center w-5 h-5 bg-emerald-500 text-slate-950 rounded">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    </span>
+                    <span class="logo-word">PDF.in</span>
+                </a>
+                <p class="leading-relaxed text-[11px] theme-text-muted">100% private document tools that run directly on your phone or computer. Your files are never uploaded to the internet.</p>
+            </div>
+            <div>
+                <h4 class="font-bold theme-text-primary mb-2.5 uppercase tracking-wider text-[11px]">Tools</h4>
+                <ul class="space-y-1.5 text-[11px] theme-text-secondary">
+                    <li><a href="#" onclick="switchTab('unlocker'); return false;" class="hover:text-emerald-500">Bank, Tax &amp; Broker PDF Unlocker</a></li>
+                    <li><a href="#" onclick="switchTab('resizer'); return false;" class="hover:text-emerald-500">Photo &amp; Document Resizer</a></li>
+                    <li><a href="#" onclick="switchTab('merge'); return false;" class="hover:text-emerald-500">Combine Multiple PDFs</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold theme-text-primary mb-2.5 uppercase tracking-wider text-[11px]">Supported Files</h4>
+                <ul class="space-y-1.5 text-[11px] theme-text-secondary">
+                    <li>HDFC, ICICI, SBI, Axis, Kotak, IDFC</li>
+                    <li>Zerodha, Groww, INDmoney, Angel One</li>
+                    <li>Income Tax AIS, 26AS, Form 16, CAS</li>
+                    <li>Passport, Exam &amp; Portal Photos/PDFs</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold theme-text-primary mb-2.5 uppercase tracking-wider text-[11px]">Source &amp; Verification</h4>
+                <p class="mb-2.5 text-[11px] theme-text-muted">Open-source client-side code. Verify zero network uploads yourself.</p>
+                <a href="#" target="_blank" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg theme-subtle theme-text-primary font-semibold hover:border-emerald-500 transition-all text-[11px]">
+                    <span>GitHub Repository (Coming Soon)</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-6 border-t flex flex-col sm:flex-row items-center justify-between text-[11px] theme-text-muted" style="border-color: var(--border-color);">
+            <p class="font-semibold theme-text-secondary">Built by Pratim &bull; &copy; 2026 SafePDF.in. All rights reserved.</p>
+            <p class="mt-2 sm:mt-0">For Geeks: Executes locally via client-side PDF.js, HTML5 Canvas &amp; PDF-Lib in browser memory.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT ENGINE -->
+    <script>
+        const WARN_TRIANGLE_SVG = `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd"/></svg>`;
+
+        // ==================== CONSOLE-ONLY DEBUG LOGGER ====================
+        function debugLog(msg, data) {
+            const ts = new Date().toLocaleTimeString();
+            if (data !== undefined) {
+                console.log(`[SafePDF ${ts}] ${msg}`, data);
+            } else {
+                console.log(`[SafePDF ${ts}] ${msg}`);
+            }
+        }
+
+        // ==================== TOAST NOTIFICATION ====================
+        let toastTimer = null;
+        function showToast(message) {
+            const toast = document.getElementById('toast-notification');
+            const msgEl = document.getElementById('toast-message');
+            if (!toast || !msgEl) return;
+
+            msgEl.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // ==================== THEME ENGINE ====================
+        function applyTheme(mode) {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            const label = document.getElementById('theme-label');
+
+            if (mode === 'light') {
+                body.setAttribute('data-theme', 'light');
+                if (icon) icon.textContent = '☀️';
+                if (label) label.textContent = 'Light';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                if (icon) icon.textContent = '🌙';
+                if (label) label.textContent = 'Dark';
+            }
+        }
+
+        function initTheme() {
+            const hour = new Date().getHours();
+            const defaultMode = (hour >= 6 && hour < 18) ? 'light' : 'dark';
+            applyTheme(defaultMode);
+        }
+
+        function toggleTheme() {
+            const current = document.body.getAttribute('data-theme');
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        initTheme();
+
+        // ==================== MODALS & MOBILE DRAWER ====================
+        function openModal() { document.getElementById('password-modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('password-modal').classList.add('hidden'); }
+        function closePreviewModal() {
+            document.getElementById('preview-modal').classList.add('hidden');
+            document.getElementById('preview-canvas-container').innerHTML = '';
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closePreviewModal();
+                document.getElementById('mobile-menu').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('password-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('password-modal')) closeModal();
+        });
+
+        document.getElementById('preview-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('preview-modal')) closePreviewModal();
+        });
+
+        document.getElementById('mobile-menu').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('mobile-menu')) document.getElementById('mobile-menu').classList.add('hidden');
+        });
+
+        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+        // ==================== CLEAR MEMORY / WIPE SESSION ====================
+        function clearMemoryState() {
+            debugLog("Wiping all session memory and loaded buffers...");
+            queueItems.forEach(item => {
+                if (item.unlockedUrl) URL.revokeObjectURL(item.unlockedUrl);
+            });
+            queueItems = [];
+            filesToMerge = [];
+            cachedMergedBytes = null;
+            lastResizerFile = null;
+            currentResizedBlob = null;
+            
+            ['unlocker-file-input', 'resizer-file-input', 'merge-file-input', 'val-unlock-name', 'val-unlock-pan', 'val-unlock-dob', 'val-unlock-extra'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            document.getElementById('unlocker-queue-container').classList.add('hidden');
+            document.getElementById('file-queue-rows').innerHTML = '';
+            document.getElementById('unlocker-process-msg').textContent = '';
+            document.getElementById('btn-download-all').disabled = true;
+            document.getElementById('resizer-output-area').classList.add('hidden');
+            document.getElementById('merge-output-area').classList.add('hidden');
+
+            const previewImg = document.getElementById('resizer-preview-img');
+            if (previewImg && previewImg.src) {
+                URL.revokeObjectURL(previewImg.src);
+                previewImg.removeAttribute('src');
+            }
+
+            fileWorkflowStage = 1;
+            renderPipeline();
+            showToast("Memory wiped! All loaded files and keys have been cleared.");
+        }
+
+        // ==================== TAB SWITCHER (Updates Desktop Dock & Mobile Drawer) ====================
+        function switchTab(targetTab) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById('panel-' + targetTab).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('active-tab');
+                if (b.getAttribute('data-target') === targetTab) b.classList.add('active-tab');
+            });
+
+            document.querySelectorAll('.mobile-nav-btn').forEach(b => {
+                b.classList.remove('active-mobile-tab');
+                if (b.getAttribute('data-target') === targetTab) b.classList.add('active-mobile-tab');
+            });
+        }
+
+        // ==================== 5-STEP PIPELINE ====================
+        let fileWorkflowStage = 1;
+
+        function renderPipeline() {
+            const isOffline = !navigator.onLine;
+            const banner = document.getElementById('connection-banner');
+            const bannerIcon = document.getElementById('banner-icon');
+            const bannerTitle = document.getElementById('banner-title');
+            const bannerDesc = document.getElementById('banner-desc');
+
+            const node2 = document.getElementById('node-2');
+            const node2Title = document.getElementById('node-2-title');
+            const node2Sub = document.getElementById('node-2-sub');
+
+            const node3 = document.getElementById('node-3');
+            const node4 = document.getElementById('node-4');
+            const node5 = document.getElementById('node-5');
+            const lineFill = document.getElementById('progress-line-fill');
+            const badge = document.getElementById('pipeline-badge');
+
+            if (isOffline) {
+                banner.className = "mb-7 p-4 rounded-2xl transition-all duration-300 banner-safe";
+                bannerIcon.textContent = "🔒";
+                bannerTitle.className = "font-bold block mb-0.5 banner-safe-title";
+                bannerTitle.textContent = "Wi-Fi is OFF — 100% Private On-Device Mode Active";
+                bannerDesc.textContent = "Your internet is disconnected. It is physically impossible for your files to leave your device.";
+
+                node2.className = "step-node-circle step-done";
+                node2.textContent = "✓";
+                node2Title.className = "mt-2 text-xs font-bold text-emerald-500";
+                node2Title.textContent = "2. Wi-Fi is OFF";
+                if (node2Sub) node2Sub.textContent = "100% Safe";
+            } else {
+                banner.className = "mb-7 p-4 rounded-2xl transition-all duration-300 banner-warn";
+                bannerIcon.textContent = "⚠️";
+                bannerTitle.className = "font-bold block mb-0.5 banner-warn-title";
+                bannerTitle.textContent = "Wi-Fi is ON — Turn Off for 100% Peace of Mind";
+                bannerDesc.textContent = "Turn off your Wi-Fi or Mobile Data right now—watch this entire toolkit keep working without internet.";
+
+                node2.className = "step-node-circle step-warn";
+                node2.innerHTML = WARN_TRIANGLE_SVG;
+                node2Title.className = "mt-2 text-xs font-bold text-amber-500";
+                node2Title.textContent = "2. Turn Off Wi-Fi";
+                if (node2Sub) node2Sub.textContent = "Wi-Fi Still ON";
+            }
+
+            if (fileWorkflowStage >= 3) {
+                node3.className = "step-node-circle step-done";
+                node3.textContent = "✓";
+                document.getElementById('node-3-title').className = "mt-2 text-xs font-bold theme-text-primary";
+            } else {
+                node3.className = "step-node-circle step-idle";
+                node3.textContent = "3";
+                document.getElementById('node-3-title').className = "mt-2 text-xs font-semibold theme-text-muted";
+            }
+
+            if (fileWorkflowStage >= 4) {
+                node4.className = "step-node-circle step-done";
+                node4.textContent = "✓";
+                document.getElementById('node-4-title').className = "mt-2 text-xs font-bold theme-text-primary";
+            } else {
+                node4.className = "step-node-circle step-idle";
+                node4.textContent = "4";
+                document.getElementById('node-4-title').className = "mt-2 text-xs font-semibold theme-text-muted";
+            }
+
+            if (fileWorkflowStage >= 5) {
+                node5.className = "step-node-circle step-done";
+                node5.textContent = "✓";
+                document.getElementById('node-5-title').className = "mt-2 text-xs font-bold theme-text-primary";
+            } else {
+                node5.className = "step-node-circle step-idle";
+                node5.textContent = "5";
+                document.getElementById('node-5-title').className = "mt-2 text-xs font-semibold theme-text-muted";
+            }
+
+            let percent = 0;
+            if (fileWorkflowStage === 5) {
+                percent = 84;
+                badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30";
+                badge.textContent = "Step 5 of 5 • Completed On-Device";
+            } else if (fileWorkflowStage === 4) {
+                percent = 63;
+                badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30";
+                badge.textContent = "Step 4 of 5 • Ready to Preview & Download";
+            } else if (fileWorkflowStage === 3) {
+                percent = 42;
+                badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30";
+                badge.textContent = "Step 3 of 5 • Files Selected";
+            } else if (isOffline) {
+                percent = 21;
+                badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30";
+                badge.textContent = "Step 2 of 5 • Wi-Fi Off (100% Private)";
+            } else {
+                percent = 0;
+                badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30";
+                badge.textContent = "Step 1 of 5 • Turn Off Wi-Fi Recommended";
+            }
+            lineFill.style.width = percent + "%";
+        }
+
+        window.addEventListener('online', renderPipeline);
+        window.addEventListener('offline', renderPipeline);
+        window.addEventListener('DOMContentLoaded', renderPipeline);
+
+        // ==================== CRASH-PROOF SINGLE-TASK PDF UNLOCKER ====================
+        let queueItems = [];
+        let crackTimeout = null;
+        let isCrackingInProgress = false;
+        let pendingCrackReRun = false;
+
+        function extractFilenameTokens(filename) {
+            const base = filename.replace(/\.[^/.]+$/, "");
+            const matches = base.match(/\d{4,12}/g) || [];
+            const tokens = new Set();
+            matches.forEach(num => {
+                tokens.add(num);
+                if (num.length > 4) {
+                    tokens.add(num.slice(0, 4));
+                    tokens.add(num.slice(-4));
+                }
+                if (num.length > 5) {
+                    tokens.add(num.slice(-5));
+                }
+            });
+            return Array.from(tokens);
+        }
+
+        async function testPasswordsInSingleWorker(buffer, candidates, fileName) {
+            debugLog(`Starting single-worker check for "${fileName}" with ${candidates.length} candidate(s)`);
+
+            return new Promise((resolve) => {
+                let candIdx = 0;
+                let currentPwd = '';
+                let settled = false;
+
+                const dataCopy = new Uint8Array(buffer.slice(0));
+                const loadingTask = pdfjsLib.getDocument({
+                    data: dataCopy,
+                    isEvalSupported: false
+                });
+
+                loadingTask.onPassword = function (updatePassword, reason) {
+                    if (candIdx < candidates.length) {
+                        currentPwd = candidates[candIdx++];
+                        debugLog(`[${fileName}] Testing candidate #${candIdx}/${candidates.length} (reason=${reason})`);
+                        updatePassword(currentPwd);
+                    } else {
+                        debugLog(`[${fileName}] All ${candidates.length} candidates rejected. Destroying worker task.`);
+                        if (!settled) {
+                            settled = true;
+                            loadingTask.destroy().then(() => {
+                                resolve({ success: false, attempts: candIdx });
+                            }).catch(() => {
+                                resolve({ success: false, attempts: candIdx });
+                            });
+                        }
+                    }
+                };
+
+                loadingTask.promise.then(async (pdfDoc) => {
+                    if (!settled) {
+                        settled = true;
+                        const numPages = pdfDoc.numPages;
+                        debugLog(`✅ [${fileName}] UNLOCKED! (${numPages} pages)`);
+                        try { await pdfDoc.destroy(); } catch (e) {}
+                        try { await loadingTask.destroy(); } catch (e) {}
+                        resolve({
+                            success: true,
+                            matchedPwd: currentPwd,
+                            alreadyOpen: (candIdx === 0),
+                            numPages: numPages
+                        });
+                    }
+                }).catch((err) => {
+                    if (!settled) {
+                        settled = true;
+                        debugLog(`[${fileName}] Worker closed:`, err && err.message ? err.message : 'Locked');
+                        loadingTask.destroy().finally(() => {
+                            resolve({ success: false, attempts: candIdx });
+                        });
+                    }
+                });
+            });
+        }
+
+        async function generateCleanUnlockedPdfOnDemand(item) {
+            if (item.unlockedBytes) return item.unlockedBytes;
+            if (item.alreadyOpen) {
+                item.unlockedBytes = new Uint8Array(item.buffer.slice(0));
+                item.unlockedUrl = URL.createObjectURL(new Blob([item.unlockedBytes], { type: 'application/pdf' }));
+                return item.unlockedBytes;
+            }
+
+            debugLog(`Building password-free PDF for "${item.file.name}"...`);
+            const dataCopy = new Uint8Array(item.buffer.slice(0));
+            const loadingTask = pdfjsLib.getDocument({
+                data: dataCopy,
+                password: item.matchedPwd
+            });
+            const pdfDoc = await loadingTask.promise;
+
+            const { PDFDocument } = PDFLib;
+            const outPdf = await PDFDocument.create();
+            const numPages = pdfDoc.numPages;
+
+            for (let p = 1; p <= numPages; p++) {
+                const page = await pdfDoc.getPage(p);
+                const viewport = page.getViewport({ scale: 1.6 });
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                const jpgDataUrl = canvas.toDataURL('image/jpeg', 0.90);
+                const jpgImage = await outPdf.embedJpg(jpgDataUrl);
+
+                const origViewport = page.getViewport({ scale: 1.0 });
+                const pdfPage = outPdf.addPage([origViewport.width, origViewport.height]);
+                pdfPage.drawImage(jpgImage, {
+                    x: 0,
+                    y: 0,
+                    width: origViewport.width,
+                    height: origViewport.height
+                });
+
+                page.cleanup();
+                canvas.width = 1;
+                canvas.height = 1;
+            }
+
+            await pdfDoc.destroy();
+            await loadingTask.destroy();
+
+            const savedBytes = await outPdf.save();
+            item.unlockedBytes = savedBytes;
+            item.unlockedUrl = URL.createObjectURL(new Blob([savedBytes], { type: 'application/pdf' }));
+            debugLog(`Clean unlocked PDF built for "${item.file.name}" (${(savedBytes.byteLength / 1024).toFixed(1)} KB)`);
+            return savedBytes;
+        }
+
+        async function handleUnifiedUnlockUpload(files) {
+            if (!files || files.length === 0) return;
+            fileWorkflowStage = 3;
+            renderPipeline();
+
+            debugLog(`Selected ${files.length} PDF file(s). Reading into memory...`);
+            queueItems = [];
+
+            for (let f of files) {
+                const buf = await f.arrayBuffer();
+                const tokens = extractFilenameTokens(f.name);
+
+                const item = {
+                    file: f,
+                    buffer: buf,
+                    isUnlocked: false,
+                    isConverting: false,
+                    alreadyOpen: false,
+                    numPages: 0,
+                    matchedPwd: '',
+                    unlockedBytes: null,
+                    unlockedUrl: null,
+                    customPwd: '',
+                    lastAttemptedCount: 0,
+                    fileTokens: tokens
+                };
+
+                const checkRes = await testPasswordsInSingleWorker(buf, [], f.name);
+                if (checkRes.success) {
+                    item.isUnlocked = true;
+                    item.alreadyOpen = true;
+                    item.numPages = checkRes.numPages;
+                }
+
+                queueItems.push(item);
+            }
+
+            document.getElementById('unlocker-queue-container').classList.remove('hidden');
+            renderQueueUI();
+            triggerAutoCrack('initial-upload');
+        }
+
+        function handleKeyringInput(inputEl, minTriggerLen) {
+            const val = (inputEl.value || '').trim();
+            if (crackTimeout) clearTimeout(crackTimeout);
+
+            if (val.length >= minTriggerLen) {
+                crackTimeout = setTimeout(() => {
+                    triggerAutoCrack(`input-${inputEl.id}`);
+                }, 400);
+            }
+        }
+
+        function updateCustomPwd(index, val) {
+            queueItems[index].customPwd = val;
+            if (crackTimeout) clearTimeout(crackTimeout);
+            if (val.trim().length >= 3) {
+                crackTimeout = setTimeout(() => {
+                    triggerAutoCrack(`custom-pwd-row-${index}`);
+                }, 500);
+            }
+        }
+
+        function buildCandidatePasswordsForItem(item) {
+            const nameRaw = (document.getElementById('val-unlock-name').value || '').trim();
+            const panRaw = (document.getElementById('val-unlock-pan').value || '').trim();
+            const dobRaw = (document.getElementById('val-unlock-dob').value || '').trim().replace(/\D/g, '');
+            const extraRaw = (document.getElementById('val-unlock-extra').value || '').trim();
+
+            const nameUpper = nameRaw.toUpperCase();
+            const nameLower = nameRaw.toLowerCase();
+            const panUpper = panRaw.toUpperCase();
+            const panLower = panRaw.toLowerCase();
+
+            let ddmm = '', ddmmyy = '', ddmmyyyy = '', yyyy = '', ddyy = '';
+            if (dobRaw.length === 8) {
+                ddmm = dobRaw.slice(0, 4);
+                ddmmyy = dobRaw.slice(0, 4) + dobRaw.slice(6, 8);
+                ddmmyyyy = dobRaw;
+                yyyy = dobRaw.slice(4, 8);
+                ddyy = dobRaw.slice(0, 2) + dobRaw.slice(6, 8);
+            } else if (dobRaw.length === 6) {
+                ddmm = dobRaw.slice(0, 4);
+                ddmmyy = dobRaw;
+                ddyy = dobRaw.slice(0, 2) + dobRaw.slice(4, 6);
+            } else if (dobRaw.length === 4) {
+                ddmm = dobRaw;
+            }
+
+            const extraTokens = extraRaw
+                .split(/[\s,;]+/)
+                .map(s => s.trim())
+                .filter(Boolean);
+
+            const expandedTokens = new Set([...extraTokens, ...item.fileTokens]);
+            extraTokens.forEach(tok => {
+                if (tok.length === 10 && /^\d+$/.test(tok)) {
+                    expandedTokens.add(tok.slice(-5));
+                    expandedTokens.add(tok.slice(-4));
+                }
+            });
+
+            const candidates = new Set();
+
+            if (item.customPwd && item.customPwd.trim()) {
+                const c = item.customPwd.trim();
+                candidates.add(c);
+                candidates.add(c.toUpperCase());
+                candidates.add(c.toLowerCase());
+            }
+
+            if (nameUpper) { candidates.add(nameUpper); candidates.add(nameLower); }
+            if (panUpper) { candidates.add(panUpper); candidates.add(panLower); }
+            if (ddmmyyyy) candidates.add(ddmmyyyy);
+            if (ddmm) candidates.add(ddmm);
+            if (ddmmyy) candidates.add(ddmmyy);
+            if (yyyy) candidates.add(yyyy);
+
+            if (nameUpper && ddmm) {
+                candidates.add(nameUpper + ddmm);
+                candidates.add(nameLower + ddmm);
+            }
+            if (nameUpper && ddmmyyyy) {
+                candidates.add(nameUpper + ddmmyyyy);
+                candidates.add(nameLower + ddmmyyyy);
+            }
+            if (nameUpper && ddmmyy) {
+                candidates.add(nameUpper + ddmmyy);
+                candidates.add(nameLower + ddmmyy);
+            }
+            if (nameUpper && yyyy) {
+                candidates.add(nameUpper + yyyy);
+                candidates.add(nameLower + yyyy);
+            }
+            if (nameUpper && ddyy) {
+                candidates.add(nameUpper + ddyy);
+                candidates.add(nameLower + ddyy);
+            }
+
+            if (panUpper && ddmmyyyy) {
+                candidates.add(panUpper + ddmmyyyy);
+                candidates.add(panLower + ddmmyyyy);
+                candidates.add(panUpper.slice(0, 5) + ddmmyyyy);
+                candidates.add(panLower.slice(0, 5) + ddmmyyyy);
+            }
+            if (panUpper && ddmm) {
+                candidates.add(panUpper + ddmm);
+                candidates.add(panLower + ddmm);
+            }
+            if (nameUpper && panUpper) {
+                candidates.add(nameLower + panUpper);
+                candidates.add(nameLower + panLower);
+                candidates.add(nameUpper + panUpper);
+            }
+
+            expandedTokens.forEach(tok => {
+                candidates.add(tok);
+                if (nameUpper) {
+                    candidates.add(nameUpper + tok);
+                    candidates.add(nameLower + tok);
+                    candidates.add(tok + nameUpper);
+                    candidates.add(tok + nameLower);
+                }
+                if (ddmmyyyy) {
+                    candidates.add(ddmmyyyy + tok);
+                    candidates.add(tok + ddmmyyyy);
+                    candidates.add(ddmmyyyy + '@' + tok);
+                }
+                if (ddmm) {
+                    candidates.add(ddmm + tok);
+                    candidates.add(tok + ddmm);
+                }
+                if (ddmmyy) {
+                    candidates.add(ddmmyy + tok);
+                    candidates.add(tok + ddmmyy);
+                }
+            });
+
+            return Array.from(candidates).filter(Boolean);
+        }
+
+        async function triggerAutoCrack(source = 'auto') {
+            if (queueItems.length === 0) return;
+
+            if (isCrackingInProgress) {
+                debugLog(`Crack loop already running (triggered by ${source}); queuing re-run...`);
+                pendingCrackReRun = true;
+                return;
+            }
+
+            isCrackingInProgress = true;
+            const indicator = document.getElementById('crack-activity-indicator');
+            indicator.classList.remove('hidden');
+
+            try {
+                for (let i = 0; i < queueItems.length; i++) {
+                    const item = queueItems[i];
+                    if (item.isUnlocked) continue;
+
+                    const candidates = buildCandidatePasswordsForItem(item);
+                    if (candidates.length === 0) continue;
+
+                    item.lastAttemptedCount = candidates.length;
+                    const res = await testPasswordsInSingleWorker(item.buffer, candidates, item.file.name);
+
+                    if (res.success) {
+                        item.isUnlocked = true;
+                        item.matchedPwd = res.matchedPwd;
+                        item.numPages = res.numPages;
+                        renderQueueUI();
+                    }
+                }
+            } finally {
+                isCrackingInProgress = false;
+                indicator.classList.add('hidden');
+                renderQueueUI();
+
+                if (pendingCrackReRun) {
+                    pendingCrackReRun = false;
+                    triggerAutoCrack('queued-rerun');
+                }
+            }
+        }
+
+        function renderQueueUI() {
+            const rowsContainer = document.getElementById('file-queue-rows');
+            rowsContainer.innerHTML = '';
+
+            let unlockedCount = 0;
+
+            queueItems.forEach((item, index) => {
+                if (item.isUnlocked) unlockedCount++;
+
+                const row = document.createElement('div');
+                row.className = "p-3.5 theme-subtle rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3";
+
+                let statusBadge = '';
+                let subStatusText = `${(item.file.size / 1024).toFixed(1)} KB`;
+
+                if (item.isConverting) {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 text-[10px] font-bold animate-pulse">⏳ Preparing PDF...</span>`;
+                } else if (item.isUnlocked) {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 text-[10px] font-bold">✅ Unlocked (${item.numPages}p)</span>`;
+                    subStatusText += item.alreadyOpen
+                        ? ` • Already Open`
+                        : ` • Password Removed & Ready`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30 text-[10px] font-bold">🔒 Locked</span>`;
+                    if (item.lastAttemptedCount > 0) {
+                        subStatusText += ` • Tested ${item.lastAttemptedCount} keys (Add DOB/PAN or custom key)`;
+                    }
+                }
+
+                const actionArea = item.isUnlocked
+                    ? `<div class="flex items-center space-x-2">
+                           <button type="button" onclick="openPreviewModal(${index})" class="px-3 py-1.5 theme-input hover:border-emerald-500 font-bold text-[11px] rounded-lg transition-all cursor-pointer">👁️ Preview</button>
+                           <button type="button" onclick="downloadSingleFile(${index})" class="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg hover:bg-emerald-400 transition-all cursor-pointer shadow-sm">⬇️ Download</button>
+                       </div>`
+                    : `<div class="flex items-center space-x-1.5">
+                           <input type="text" placeholder="Custom password..." oninput="updateCustomPwd(${index}, this.value)" onkeydown="if(event.key==='Enter') triggerAutoCrack('enter-key')" value="${item.customPwd.replace(/"/g, '&quot;')}" class="px-2.5 py-1.5 theme-input rounded-lg text-xs w-40 font-semibold">
+                           <button type="button" onclick="triggerAutoCrack('row-try-btn')" class="px-2.5 py-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold hover:bg-emerald-500 hover:text-slate-950 transition-all cursor-pointer">Try</button>
+                       </div>`;
+
+                row.innerHTML = `
+                    <div class="flex items-center space-x-3 overflow-hidden">
+                        <span class="text-lg">${item.isUnlocked ? '🔓' : '📄'}</span>
+                        <div class="overflow-hidden">
+                            <p class="text-xs font-bold theme-text-primary truncate max-w-[210px] sm:max-w-[260px]">${item.file.name}</p>
+                            <span class="text-[10px] theme-text-muted block">${subStatusText}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2.5 w-full sm:w-auto justify-between sm:justify-end shrink-0">
+                        ${statusBadge}
+                        ${actionArea}
+                    </div>
+                `;
+                rowsContainer.appendChild(row);
+            });
+
+            document.getElementById('unlocked-counter').textContent = unlockedCount;
+            document.getElementById('total-counter').textContent = queueItems.length;
+
+            const downloadAllBtn = document.getElementById('btn-download-all');
+            if (unlockedCount > 0) {
+                downloadAllBtn.disabled = false;
+                if (fileWorkflowStage < 4) fileWorkflowStage = 4;
+            } else {
+                downloadAllBtn.disabled = true;
+                if (queueItems.length > 0) fileWorkflowStage = 3;
+            }
+            renderPipeline();
+        }
+
+        // ==================== SHARED PDF PREVIEW MODAL RENDERER ====================
+        async function renderPdfBytesInPreviewModal(bufferData, password, titleText, subText, onDownloadClick) {
+            const modal = document.getElementById('preview-modal');
+            const titleEl = document.getElementById('preview-modal-title');
+            const pageInfoEl = document.getElementById('preview-page-info');
+            const container = document.getElementById('preview-canvas-container');
+            const downloadBtn = document.getElementById('preview-download-btn');
+
+            titleEl.textContent = titleText;
+            pageInfoEl.textContent = subText;
+            container.innerHTML = `<p class="text-xs text-emerald-400 font-semibold py-8 animate-pulse">Rendering live document preview...</p>`;
+            downloadBtn.onclick = onDownloadClick;
+
+            modal.classList.remove('hidden');
+
+            try {
+                const dataCopy = new Uint8Array(bufferData.slice(0));
+                const loadingTask = pdfjsLib.getDocument({
+                    data: dataCopy,
+                    password: password || undefined
+                });
+                const pdfDoc = await loadingTask.promise;
+
+                container.innerHTML = '';
+                const maxPreviewPages = Math.min(pdfDoc.numPages, 10);
+                pageInfoEl.textContent = `${pdfDoc.numPages} Page(s) • ${subText}`;
+
+                for (let p = 1; p <= maxPreviewPages; p++) {
+                    const page = await pdfDoc.getPage(p);
+                    const viewport = page.getViewport({ scale: 1.3 });
+                    const wrapper = document.createElement('div');
+                    wrapper.className = "w-full flex flex-col items-center space-y-1.5";
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    canvas.className = "max-w-full h-auto rounded-xl shadow-2xl border border-white/10 bg-white";
+
+                    const ctx = canvas.getContext('2d');
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                    const pageLabel = document.createElement('span');
+                    pageLabel.className = "text-[10px] text-slate-400 font-semibold";
+                    pageLabel.textContent = `Page ${p} of ${pdfDoc.numPages}`;
+
+                    wrapper.appendChild(canvas);
+                    wrapper.appendChild(pageLabel);
+                    container.appendChild(wrapper);
+
+                    page.cleanup();
+                }
+
+                await pdfDoc.destroy();
+                await loadingTask.destroy();
+            } catch (err) {
+                debugLog("Error rendering preview:", err.message);
+                container.innerHTML = `<p class="text-xs text-rose-400 font-semibold py-8">Could not render preview: ${err.message}</p>`;
+            }
+        }
+
+        async function openPreviewModal(index) {
+            const item = queueItems[index];
+            if (!item || !item.isUnlocked) return;
+
+            await renderPdfBytesInPreviewModal(
+                item.buffer,
+                item.matchedPwd,
+                `Unlocked_${item.file.name}`,
+                `Verified Password-Free`,
+                () => downloadSingleFile(index)
+            );
+        }
+
+        async function downloadSingleFile(index) {
+            const item = queueItems[index];
+            if (!item || !item.isUnlocked) return;
+
+            item.isConverting = true;
+            renderQueueUI();
+
+            try {
+                await generateCleanUnlockedPdfOnDemand(item);
+                const a = document.createElement('a');
+                a.href = item.unlockedUrl;
+                a.download = `Unlocked_${item.file.name}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                fileWorkflowStage = 5;
+            } catch (err) {
+                debugLog(`Error building unlocked PDF for ${item.file.name}:`, err.message);
+                alert("Error generating unlocked PDF: " + err.message);
+            } finally {
+                item.isConverting = false;
+                renderQueueUI();
+            }
+        }
+
+        async function downloadAllUnlockedZipped() {
+            const unlockedItems = queueItems.filter(i => i.isUnlocked);
+            if (unlockedItems.length === 0) return;
+
+            document.getElementById('unlocker-process-msg').textContent = `⏳ Building clean PDFs for ${unlockedItems.length} file(s)...`;
+
+            const zip = new JSZip();
+            for (let item of unlockedItems) {
+                const bytes = await generateCleanUnlockedPdfOnDemand(item);
+                zip.file(`Unlocked_${item.file.name}`, bytes);
+            }
+
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SafePDF_All_Unlocked_${Date.now()}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            fileWorkflowStage = 5;
+            renderPipeline();
+            document.getElementById('unlocker-process-msg').textContent = `✓ Downloaded ${unlockedItems.length} verified unlocked PDF(s) in ZIP!`;
+        }
+
+        // ==================== PHOTO & DOCUMENT RESIZER ====================
+        function syncInputFromSlider(val) { document.getElementById('size-input').value = val; }
+        function syncSliderFromInput(val) {
+            const clamped = Math.min(1000, Math.max(10, parseInt(val) || 50));
+            document.getElementById('size-slider').value = clamped;
+        }
+        function setExactKB(val) {
+            document.getElementById('size-input').value = val;
+            document.getElementById('size-slider').value = Math.min(1000, val);
+        }
+
+        let lastResizerFile = null;
+        let currentResizedBlob = null;
+        let currentResizedExt = 'jpg';
+
+        function toggleWatermarkField(checked) {
+            document.getElementById('watermark-input-wrap').classList.toggle('hidden', !checked);
+            if (!checked && lastResizerFile) {
+                runResizeProcess(lastResizerFile);
+            }
+        }
+
+        function applyWatermarkNow() {
+            document.getElementById('watermark-toggle').checked = true;
+            if (!lastResizerFile) {
+                showToast("Watermark saved! Now select a photo or PDF below to apply it.");
+                return;
+            }
+            runResizeProcess(lastResizerFile);
+        }
+
+        function handleResizerUpload(files) {
+            if (!files || files.length === 0) return;
+            lastResizerFile = files[0];
+            runResizeProcess(lastResizerFile);
+        }
+
+        function redoResizeWithCurrentFile() {
+            if (!lastResizerFile) {
+                alert("Please select a photo or PDF document first.");
+                return;
+            }
+            runResizeProcess(lastResizerFile);
+        }
+
+        async function runResizeProcess(file) {
+            const targetKB = Math.max(10, parseInt(document.getElementById('size-input').value) || 50);
+            const addWatermark = document.getElementById('watermark-toggle').checked;
+            const watermarkText = document.getElementById('watermark-text').value;
+            const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+            fileWorkflowStage = 3;
+            renderPipeline();
+
+            document.getElementById('resizer-output-area').classList.add('hidden');
+            document.getElementById('resizer-spinner-area').classList.remove('hidden');
+
+            debugLog(`Resizing "${file.name}" (${isPdf ? 'PDF' : 'Image'}) to target <= ${targetKB} KB (Watermark: ${addWatermark})...`);
+
+            if (isPdf) {
+                currentResizedExt = 'pdf';
+                try {
+                    const buf = await file.arrayBuffer();
+                    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buf) });
+                    const pdfDoc = await loadingTask.promise;
+                    const numPages = pdfDoc.numPages;
+
+                    let low = 0.15, high = 0.92, bestPdfBytes = null, firstPagePreviewUrl = null;
+                    const baseScale = targetKB < 150 ? 1.0 : 1.4;
+
+                    for (let attempt = 0; attempt < 5; attempt++) {
+                        const q = (low + high) / 2;
+                        const { PDFDocument } = PDFLib;
+                        const outPdf = await PDFDocument.create();
+
+                        for (let p = 1; p <= numPages; p++) {
+                            const page = await pdfDoc.getPage(p);
+                            const viewport = page.getViewport({ scale: baseScale });
+                            const canvas = document.createElement('canvas');
+                            canvas.width = viewport.width;
+                            canvas.height = viewport.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.fillStyle = "#FFFFFF";
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                            if (addWatermark && watermarkText) {
+                                ctx.save();
+                                const fontSize = Math.max(16, Math.floor(canvas.width / 22));
+                                ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                                ctx.fillStyle = "rgba(220, 38, 38, 0.38)";
+                                ctx.textAlign = "center";
+                                ctx.translate(canvas.width / 2, canvas.height / 2);
+                                ctx.rotate(-Math.PI / 6);
+                                ctx.fillText(watermarkText, 0, 0);
+                                ctx.restore();
+                            }
+
+                            const jpgDataUrl = canvas.toDataURL('image/jpeg', q);
+                            if (p === 1) firstPagePreviewUrl = jpgDataUrl;
+
+                            const jpgImg = await outPdf.embedJpg(jpgDataUrl);
+                            const origVp = page.getViewport({ scale: 1.0 });
+                            const pdfPage = outPdf.addPage([origVp.width, origVp.height]);
+                            pdfPage.drawImage(jpgImg, { x: 0, y: 0, width: origVp.width, height: origVp.height });
+
+                            page.cleanup();
+                            canvas.width = 1; canvas.height = 1;
+                        }
+
+                        const candidateBytes = await outPdf.save();
+                        const kb = candidateBytes.byteLength / 1024;
+                        if (kb <= targetKB || !bestPdfBytes) bestPdfBytes = candidateBytes;
+
+                        if (kb > targetKB) high = q;
+                        else low = q;
+                    }
+
+                    await pdfDoc.destroy();
+                    await loadingTask.destroy();
+
+                    currentResizedBlob = new Blob([bestPdfBytes], { type: 'application/pdf' });
+                    setTimeout(() => {
+                        document.getElementById('resizer-spinner-area').classList.add('hidden');
+                        document.getElementById('resizer-output-area').classList.remove('hidden');
+                        document.getElementById('resizer-result-text').textContent = `✓ Ready! Compressed PDF Size: ${(currentResizedBlob.size / 1024).toFixed(1)} KB (Limit: ${targetKB} KB)`;
+                        if (firstPagePreviewUrl) document.getElementById('resizer-preview-img').src = firstPagePreviewUrl;
+                        document.getElementById('btn-download-resized').textContent = '⬇️ Download Resized PDF';
+                        fileWorkflowStage = 4;
+                        renderPipeline();
+                    }, 600);
+                } catch (err) {
+                    document.getElementById('resizer-spinner-area').classList.add('hidden');
+                    alert("Could not resize this PDF (if it is password-locked, unlock it in Tab 1 first).");
+                }
+                return;
+            }
+
+            // Image compression path
+            currentResizedExt = 'jpg';
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    let scale = 1;
+                    if (targetKB <= 30 && img.width > 800) scale = 800 / img.width;
+                    else if (targetKB <= 60 && img.width > 1200) scale = 1200 / img.width;
+                    else if (img.width > 2200) scale = 2200 / img.width;
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    if (addWatermark && watermarkText) {
+                        ctx.save();
+                        const fontSize = Math.max(16, Math.floor(canvas.width / 22));
+                        ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                        ctx.fillStyle = "rgba(220, 38, 38, 0.38)";
+                        ctx.textAlign = "center";
+                        ctx.translate(canvas.width / 2, canvas.height / 2);
+                        ctx.rotate(-Math.PI / 6);
+                        ctx.fillText(watermarkText, 0, 0);
+                        ctx.restore();
+                    }
+
+                    let low = 0.06, high = 0.95, bestBlob = null;
+                    let step = 0;
+
+                    function searchQuality() {
+                        const q = (low + high) / 2;
+                        canvas.toBlob(function(blob) {
+                            step++;
+                            const kb = blob.size / 1024;
+                            if (kb <= targetKB || !bestBlob) bestBlob = blob;
+
+                            if (step < 7) {
+                                if (kb > targetKB) high = q;
+                                else low = q;
+                                searchQuality();
+                            } else {
+                                currentResizedBlob = bestBlob;
+                                setTimeout(() => {
+                                    document.getElementById('resizer-spinner-area').classList.add('hidden');
+                                    document.getElementById('resizer-output-area').classList.remove('hidden');
+                                    document.getElementById('resizer-result-text').textContent = `✓ Ready! Final Size: ${(bestBlob.size / 1024).toFixed(1)} KB (Limit: ${targetKB} KB)`;
+                                    document.getElementById('resizer-preview-img').src = URL.createObjectURL(bestBlob);
+                                    document.getElementById('btn-download-resized').textContent = '⬇️ Download Resized Image';
+
+                                    fileWorkflowStage = 4;
+                                    renderPipeline();
+                                }, 650);
+                            }
+                        }, 'image/jpeg', q);
+                    }
+                    searchQuality();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function downloadResizedOutput() {
+            if (!currentResizedBlob) return;
+            const url = URL.createObjectURL(currentResizedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SafePDF_Resized_${Date.now()}.${currentResizedExt}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            fileWorkflowStage = 5;
+            renderPipeline();
+        }
+
+        // ==================== MERGE PDFS + LIVE PREVIEW ====================
+        let filesToMerge = [];
+        let cachedMergedBytes = null;
+
+        function handleMergeUpload(files) {
+            if (!files || files.length === 0) return;
+            filesToMerge = Array.from(files);
+            cachedMergedBytes = null;
+            fileWorkflowStage = 3;
+            renderPipeline();
+
+            document.getElementById('merge-output-area').classList.remove('hidden');
+            document.getElementById('merge-count-text').textContent = `${filesToMerge.length} PDF file(s) ready to combine.`;
+        }
+
+        async function buildMergedPdfBytes() {
+            if (cachedMergedBytes) return cachedMergedBytes;
+            const { PDFDocument } = PDFLib;
+            const mergedPdf = await PDFDocument.create();
+
+            for (let file of filesToMerge) {
+                const bytes = await file.arrayBuffer();
+                const pdf = await PDFDocument.load(bytes);
+                const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                copiedPages.forEach((page) => mergedPdf.addPage(page));
+            }
+
+            cachedMergedBytes = await mergedPdf.save();
+            return cachedMergedBytes;
+        }
+
+        async function previewMergedPdf() {
+            if (filesToMerge.length === 0) return;
+            try {
+                const mergedBytes = await buildMergedPdfBytes();
+                fileWorkflowStage = 4;
+                renderPipeline();
+
+                await renderPdfBytesInPreviewModal(
+                    mergedBytes,
+                    '',
+                    `SafePDF_Combined_Preview.pdf`,
+                    `Combined from ${filesToMerge.length} files`,
+                    () => executeRealPdfMerge()
+                );
+            } catch (err) {
+                debugLog("Merge preview error:", err.message);
+                alert("One or more PDFs are password-protected. Please unlock them in the Unlock PDFs tab first before merging.");
+            }
+        }
+
+        async function executeRealPdfMerge() {
+            if (filesToMerge.length === 0) return;
+            fileWorkflowStage = 4;
+            renderPipeline();
+
+            try {
+                const mergedBytes = await buildMergedPdfBytes();
+                const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `SafePDF_Combined_${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                fileWorkflowStage = 5;
+                renderPipeline();
+            } catch (err) {
+                alert("One or more PDFs are password-protected. Please unlock them in the Unlock PDFs tab first before merging.");
+            }
+        }
+    </script>
+</body>
+</html>
